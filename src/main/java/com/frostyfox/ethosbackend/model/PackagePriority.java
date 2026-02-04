@@ -33,5 +33,8 @@ public class PackagePriority {
     @Column(columnDefinition = "TEXT")
     private String pythonResponse;
     
+    @Column(columnDefinition = "TEXT")
+    private String explanation;
+    
     private String createdAt;
 }

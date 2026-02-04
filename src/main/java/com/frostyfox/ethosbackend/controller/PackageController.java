@@ -42,4 +42,14 @@ public class PackageController {
             ResponseEntity.ok(packagePriority) : 
             ResponseEntity.notFound().build();
     }
+    
+    @GetMapping("/{id}/explanation")
+    public ResponseEntity<Map<String, Object>> getPackageExplanation(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean force) {
+        Map<String, Object> explanation = ethosService.getPackageExplanation(id, force);
+        return explanation != null ? 
+            ResponseEntity.ok(explanation) : 
+            ResponseEntity.notFound().build();
+    }
 }

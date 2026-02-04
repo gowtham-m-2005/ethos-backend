@@ -72,6 +72,7 @@ public class EthosService {
             packagePriority.setDeliveryTime(ethosModel.getDeliveryTime());
             packagePriority.setEthicalScore(ethicalScore);
             packagePriority.setPythonResponse(responseJson);
+            packagePriority.setExplanation(generateSimpleExplanation(packagePriority));
             packagePriority.setCreatedAt(timestamp);
             
             packagePriorityRepository.save(packagePriority);
@@ -244,6 +245,100 @@ public class EthosService {
     
     public PackagePriority getPackageById(Long id) {
         return packagePriorityRepository.findById(id).orElse(null);
+    }
+    
+    public Map<String, Object> getPackageExplanation(Long id, boolean forceRegenerate) {
+        PackagePriority pkg = packagePriorityRepository.findById(id).orElse(null);
+        
+        if (pkg == null) {
+            return null;
+        }
+        
+        // If no explanation exists or force=true, generate and store it
+        if (pkg.getExplanation() == null || forceRegenerate) {
+            String explanation = generateSimpleExplanation(pkg);
+            pkg.setExplanation(explanation);
+            packagePriorityRepository.save(pkg);
+            return Map.of(
+                "packageId", pkg.getPackageId(),
+                "explanation", explanation,
+                "source", "generated"
+            );
+        }
+        
+        // Return existing explanation
+        return Map.of(
+            "packageId", pkg.getPackageId(),
+            "explanation", pkg.getExplanation(),
+            "source", "persisted"
+        );
+    }
+    
+    private String generateSimpleExplanation(PackagePriority pkg) {
+        StringBuilder explanation = new StringBuilder();
+        
+        // Start with delivery type context
+        if ("MEDICAL_EXPRESS".equals(pkg.getDeliveryType())) {
+            explanation.append("This medical package from ").append(pkg.getPickupLocation())
+                      .append(" to ").append(pkg.getDestination())
+                      .append(" contains critical medical supplies with an ethical score of ")
+                      .append(pkg.getEthicalScore()).append(", ");
+            
+            if (pkg.getEthicalScore() >= 8.0) {
+                explanation.append("requiring immediate delivery as delays could cause serious harm to patients.");
+            } else if (pkg.getEthicalScore() >= 6.0) {
+                explanation.append("needing priority delivery to ensure timely medical treatment.");
+            } else {
+                explanation.append("requiring careful handling and timely delivery for patient care.");
+            }
+            
+        } else if ("FOOD_EXPRESS".equals(pkg.getDeliveryType())) {
+            explanation.append("This food package traveling from ").append(pkg.getPickupLocation())
+                      .append(" to ").append(pkg.getDestination())
+                      .append(" has an ethical score of ").append(pkg.getEthicalScore())
+                      .append(" and ");
+            
+            if (pkg.getEthicalScore() >= 6.0) {
+                explanation.append("contains perishable items that will spoil if not delivered quickly by ")
+                          .append(pkg.getDeliveryTime()).append(".");
+            } else {
+                explanation.append("requires timely delivery to maintain food quality for the recipient.");
+            }
+            
+        } else if ("ESSENTIAL".equals(pkg.getDeliveryType())) {
+            explanation.append("This essential package from ").append(pkg.getPickupLocation())
+                      .append(" to ").append(pkg.getDestination())
+                      .append(" has an ethical score of ").append(pkg.getEthicalScore())
+                      .append(" and ");
+            
+            if (pkg.getEthicalScore() >= 7.0) {
+                explanation.append("contains items that someone urgently needs, requiring priority delivery by ")
+                          .append(pkg.getDeliveryTime()).append(".");
+            } else {
+                explanation.append("contains important items needed by the recipient, warranting priority handling.");
+            }
+            
+        } else {
+            // Standard packages with contextual details
+            explanation.append("This package from ").append(pkg.getPickupLocation())
+                      .append(" to ").append(pkg.getDestination())
+                      .append(" has an ethical score of ").append(pkg.getEthicalScore());
+            
+            if (pkg.getEthicalScore() >= 5.0) {
+                explanation.append(" and requires priority delivery due to its importance level.");
+            } else if (pkg.getEthicalScore() >= 3.0) {
+                explanation.append(" and should be delivered by ").append(pkg.getDeliveryTime())
+                          .append(" to meet the recipient's needs.");
+            } else {
+                explanation.append(" and can be delivered with standard priority handling.");
+            }
+        }
+        
+        // Add priority context
+        explanation.append(" It is assigned Priority ").append(pkg.getCurrentPriority())
+                  .append(" based on its relative importance compared to other packages.");
+        
+        return explanation.toString();
     }
 
 //    public void sendEthos(EthosModel ethosModel){
