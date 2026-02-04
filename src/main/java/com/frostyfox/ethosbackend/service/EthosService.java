@@ -190,6 +190,59 @@ public class EthosService {
             log.error("Error during priority recalculation", e);
         }
     }
+    
+    // Package management methods
+    public List<PackagePriority> getAllPackages() {
+        return packagePriorityRepository.findAllOrderByEthicalScoreDesc();
+    }
+    
+    public List<PackagePriority> getPackagesByDeliveryType(String deliveryType) {
+        return packagePriorityRepository.findAll()
+            .stream()
+            .filter(pkg -> pkg.getDeliveryType().equalsIgnoreCase(deliveryType))
+            .toList();
+    }
+    
+    public Map<String, Object> getPackageStats() {
+        List<PackagePriority> allPackages = packagePriorityRepository.findAll();
+        
+        // Count by priority
+        Map<Integer, Long> priorityCounts = allPackages.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                PackagePriority::getCurrentPriority, 
+                java.util.stream.Collectors.counting()
+            ));
+        
+        // Count by delivery type
+        Map<String, Long> deliveryTypeCounts = allPackages.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                PackagePriority::getDeliveryType, 
+                java.util.stream.Collectors.counting()
+            ));
+        
+        // Average ethical score
+        double avgEthicalScore = allPackages.stream()
+            .mapToDouble(PackagePriority::getEthicalScore)
+            .average()
+            .orElse(0.0);
+        
+        return Map.of(
+            "totalPackages", allPackages.size(),
+            "priorityDistribution", priorityCounts,
+            "deliveryTypeDistribution", deliveryTypeCounts,
+            "averageEthicalScore", avgEthicalScore,
+            "highestPriorityPackage", allPackages.stream()
+                .min((a, b) -> b.getEthicalScore().compareTo(a.getEthicalScore()))
+                .orElse(null),
+            "lowestPriorityPackage", allPackages.stream()
+                .min((a, b) -> a.getEthicalScore().compareTo(b.getEthicalScore()))
+                .orElse(null)
+        );
+    }
+    
+    public PackagePriority getPackageById(Long id) {
+        return packagePriorityRepository.findById(id).orElse(null);
+    }
 
 //    public void sendEthos(EthosModel ethosModel){
 //        webClient.post()
