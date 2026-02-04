@@ -24,6 +24,8 @@ public class PackagePriority {
     
     private String pickupLocation;
     
+    private String destination;
+    
     private String deliveryTime;
     
     private Double ethicalScore;

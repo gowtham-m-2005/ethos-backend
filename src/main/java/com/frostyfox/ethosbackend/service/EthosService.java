@@ -41,7 +41,8 @@ public class EthosService {
                 .retrieve()
                 .bodyToMono(Object.class)
                 .block();
-        
+
+        System.out.println("TTTTTTTTTTTTTTHHHHHHHHEEEEEEEEEEE");
         // Save package priority to database
         savePackagePriority(ethosModel, response);
         
@@ -67,6 +68,7 @@ public class EthosService {
             packagePriority.setCurrentPriority(priority);
             packagePriority.setDeliveryType(determineDeliveryType(pythonResponse));
             packagePriority.setPickupLocation(ethosModel.getPickupLocation());
+            packagePriority.setDestination(ethosModel.getDestination());
             packagePriority.setDeliveryTime(ethosModel.getDeliveryTime());
             packagePriority.setEthicalScore(ethicalScore);
             packagePriority.setPythonResponse(responseJson);
