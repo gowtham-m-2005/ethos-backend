@@ -52,4 +52,10 @@ public class PackageController {
             ResponseEntity.ok(explanation) : 
             ResponseEntity.notFound().build();
     }
+    
+    @PostMapping("/populate-explanations")
+    public ResponseEntity<Map<String, String>> populateExistingPackageExplanations() {
+        String result = ethosService.populateExistingPackageExplanations();
+        return ResponseEntity.ok(Map.of("message", result));
+    }
 }

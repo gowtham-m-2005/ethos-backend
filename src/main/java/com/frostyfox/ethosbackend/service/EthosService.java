@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 public class EthosService {
     private final EthosRepository ethosRepository;
     private final PackagePriorityRepository packagePriorityRepository;
+    private final DistributionService distributionService;
     private final WebClient webClient;
 
     public String getEthos(EthosModel ethosModel){
@@ -79,6 +80,9 @@ public class EthosService {
             
             // Recalculate all priorities based on ethical scores
             recalculateAllPriorities();
+            
+            // Assign new package to driver automatically
+            distributionService.assignNewPackageToDriver(packagePriority);
             
             log.info("Package priority saved with ID: {}, Priority: {}, Ethical Score: {}", 
                     packagePriority.getId(), priority, ethicalScore);
@@ -245,6 +249,28 @@ public class EthosService {
     
     public PackagePriority getPackageById(Long id) {
         return packagePriorityRepository.findById(id).orElse(null);
+    }
+    
+    public String populateExistingPackageExplanations() {
+        try {
+            List<PackagePriority> allPackages = packagePriorityRepository.findAll();
+            int updatedCount = 0;
+            
+            for (PackagePriority pkg : allPackages) {
+                if (pkg.getExplanation() == null || pkg.getExplanation().isEmpty()) {
+                    pkg.setExplanation(generateSimpleExplanation(pkg));
+                    packagePriorityRepository.save(pkg);
+                    updatedCount++;
+                }
+            }
+            
+            log.info("Populated explanations for {} existing packages", updatedCount);
+            return "Successfully populated explanations for " + updatedCount + " packages";
+            
+        } catch (Exception e) {
+            log.error("Error populating existing package explanations", e);
+            return "Error: " + e.getMessage();
+        }
     }
     
     public Map<String, Object> getPackageExplanation(Long id, boolean forceRegenerate) {

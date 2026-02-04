@@ -36,5 +36,7 @@ public class PackagePriority {
     @Column(columnDefinition = "TEXT")
     private String explanation;
     
+    private String assignedDriver;
+    
     private String createdAt;
 }
