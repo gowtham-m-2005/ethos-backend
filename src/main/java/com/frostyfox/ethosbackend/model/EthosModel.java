@@ -13,5 +13,11 @@ public class EthosModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String description;
+    private String senderName;
+    private String pickupLocation;
+    private String packageDescription;
+    private String packageWeight;
+    private String deliveryTime;
+    private String receiverName;
+    private String destination;
 }
